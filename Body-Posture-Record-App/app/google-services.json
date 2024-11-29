@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "850109717975",
+    "project_id": "body-posture-record-app-73450",
+    "storage_bucket": "body-posture-record-app-73450.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:850109717975:android:556060915ed613f7c9ff92",
+        "android_client_info": {
+          "package_name": "com.example.body_posture_record_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD6VWamWjmphEZ3RENFXZXsTn2kJjPUrsc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
