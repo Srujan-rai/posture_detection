@@ -270,12 +270,19 @@ class PostureApp:
         except Exception as e:
             print("Error processing landmarks:", e)
             self.update_status("Not Detected")
-
+            
+            
+        image.flags.writeable = True
+        if results.pose_landmarks:
+            mp_drawing.draw_landmarks(image, results.pose_landmarks, mp_pose.POSE_CONNECTIONS)
         # Display the frame
-        image = Image.fromarray(image)
-        image = image.resize((800, 500))
-        photo = ImageTk.PhotoImage(image)
-        self.canvas.create_image(0, 0, anchor=tk.NW, image=photo)
+        img = Image.fromarray(image)
+        imgtk = ImageTk.PhotoImage(image=img)
+
+        self.canvas.create_image(0, 0, anchor=tk.NW, image=imgtk)
+        self.canvas.image = imgtk
+
+        # Schedule the next frame
         self.root.after(10, self.process_frame)
 
     def store_posture_data(self, posture_status):
