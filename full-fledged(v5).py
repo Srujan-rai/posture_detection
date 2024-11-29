@@ -128,6 +128,19 @@ class PostureApp:
         )
         header_label.pack()
 
+        # Add Logout Button
+        logout_button = tk.Button(
+            header_frame,
+            text="Logout",
+            command=self.logout_user,
+            bg="#F44336",
+            fg="white",
+            font=("Helvetica", 12, "bold"),
+            activebackground="#e53935",
+            width=10,
+        )
+        logout_button.pack(side=tk.RIGHT, padx=10, pady=10)
+
         # Frame for controls
         control_frame = tk.Frame(self.root, bg="white", height=100, pady=10)
         control_frame.pack(side=tk.TOP, fill=tk.X)
@@ -177,6 +190,17 @@ class PostureApp:
 
         self.status_indicator = tk.Label(status_frame, width=2, height=1, bg="gray")
         self.status_indicator.pack(side=tk.LEFT)
+
+    def logout_user(self):
+        # Stop detection if running
+        if self.running:
+            self.stop_detection()
+
+        # Destroy current window and show login screen
+        self.root.destroy()
+        root = tk.Tk()
+        LoginSignupApp(root)
+        root.mainloop()
 
     def update_status(self, posture_status):
         self.status_label.config(text=f"Posture Status: {posture_status}")
