@@ -1,5 +1,5 @@
 pyinstaller --onefile --hidden-import=tkinter --hidden-import=PIL --hidden-import=pyrebase --hidden-import=cv2 \
---add-data "/home/srujan/Documents/Projects/posture_detection/myenv/lib/python3.10/site-packages/mediapipe/modules/pose_landmark/pose_landmark_cpu.binarypb:mediapipe/modules/pose_landmark" \
+--add-data "/home/srujan/Downloads/posture_detection/myenv/lib/python3.10/site-packages/mediapipe/modules/pose_landmark/pose_landmark_cpu.binarypb:mediapipe/modules/pose_landmark" \
 main.py
 
 
@@ -11,7 +11,16 @@ sudo apt-get install python3-tk
 V2
 pyinstaller --onefile --hidden-import=tkinter --hidden-import=Pillow._tkinter_finder --hidden-import=tkinter._fix --hidden-import=tkinter._fiximport \
 --hidden-import=pyrebase --hidden-import=cv2 \
---add-data "/home/srujan/Documents/Projects/posture_detection/myenv/lib/python3.10/site-packages/mediapipe/modules/pose_landmark/pose_landmark_cpu.binarypb:mediapipe/modules/pose_landmark" \
---add-data "/home/srujan/Documents/Projects/posture_detection/myenv/lib/python3.10/site-packages/mediapipe/modules/pose_landmark/pose_landmark_full.tflite:mediapipe/modules/pose_landmark" \
---add-data "/home/srujan/Documents/Projects/posture_detection/myenv/lib/python3.10/site-packages/mediapipe/modules/pose_detection/pose_detection.tflite:mediapipe/modules/pose_detection" \
+--add-data "/home/srujan/Downloads/posture_detection/myenv/lib/python3.10/site-packages/mediapipe/modules/pose_landmark/pose_landmark_cpu.binarypb:mediapipe/modules/pose_landmark" \
+--add-data "/home/srujan/Downloads/posture_detection/myenv/lib/python3.10/site-packages/mediapipe/modules/pose_landmark/pose_landmark_full.tflite:mediapipe/modules/pose_landmark" \
+--add-data "/home/srujan/Downloads/posture_detection/myenv/lib/python3.10/site-packages/mediapipe/modules/pose_detection/pose_detection.tflite:mediapipe/modules/pose_detection" \
+main.py
+
+
+
+pyinstaller --onefile --hidden-import=tkinter --hidden-import=Pillow._tkinter_finder --hidden-import=tkinter._fix --hidden-import=tkinter._fiximport \
+--additional-hooks-dir=. \
+--add-data "/home/srujan/Downloads/posture_detection/myenv/lib/python3.10/site-packages/mediapipe/modules/pose_landmark/pose_landmark_cpu.binarypb:mediapipe/modules/pose_landmark" \
+--add-data "/home/srujan/Downloads/posture_detection/myenv/lib/python3.10/site-packages/mediapipe/modules/pose_landmark/pose_landmark_full.tflite:mediapipe/modules/pose_landmark" \
+--add-data "/home/srujan/Downloads/posture_detection/myenv/lib/python3.10/site-packages/mediapipe/modules/pose_detection/pose_detection.tflite:mediapipe/modules/pose_detection" \
 main.py

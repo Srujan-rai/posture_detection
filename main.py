@@ -186,7 +186,6 @@ class PostureApp:
         if self.running:
             self.stop_detection()
 
-        # Destroy current window and show login screen
         self.root.destroy()
         root = tk.Tk()
         LoginSignupApp(root)
@@ -303,14 +302,22 @@ class PostureApp:
         # Get the current time
         current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-        # Store data in Firebase (overwrite existing data for the user)
         data = {
             "status": posture_status,
             "time": current_time,
         }
-        db.child("posture_logs").child(self.user_id).set(data)  
+        db.child("posture_logs").child(self.user_id).child("live").set(data)
 
+        history_ref = db.child("posture_logs").child(self.user_id).child("history")
 
+        history_ref.push(data)
+
+        history_data = history_ref.get().val() or {}
+
+        if len(history_data) > 300:
+            oldest_key = min(history_data.keys(), key=lambda k: int(k))
+
+            history_ref.child(oldest_key).remove()
 if __name__ == "__main__":
     root = tk.Tk()
     app = LoginSignupApp(root)

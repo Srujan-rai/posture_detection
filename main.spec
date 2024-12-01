@@ -5,7 +5,7 @@ a = Analysis(
     ['main.py'],
     pathex=[],
     binaries=[],
-    datas=[('/home/srujan/Documents/Projects/posture_detection/myenv/lib/python3.10/site-packages/mediapipe/modules/pose_landmark/pose_landmark_cpu.binarypb', 'mediapipe/modules/pose_landmark'), ('/home/srujan/Documents/Projects/posture_detection/myenv/lib/python3.10/site-packages/mediapipe/modules/pose_landmark/pose_landmark_full.tflite', 'mediapipe/modules/pose_landmark'), ('/home/srujan/Documents/Projects/posture_detection/myenv/lib/python3.10/site-packages/mediapipe/modules/pose_detection/pose_detection.tflite', 'mediapipe/modules/pose_detection')],
+    datas=[('/home/srujan/Downloads/posture_detection/myenv/lib/python3.10/site-packages/mediapipe/modules/pose_landmark/pose_landmark_cpu.binarypb', 'mediapipe/modules/pose_landmark'), ('/home/srujan/Downloads/posture_detection/myenv/lib/python3.10/site-packages/mediapipe/modules/pose_landmark/pose_landmark_full.tflite', 'mediapipe/modules/pose_landmark'), ('/home/srujan/Downloads/posture_detection/myenv/lib/python3.10/site-packages/mediapipe/modules/pose_detection/pose_detection.tflite', 'mediapipe/modules/pose_detection')],
     hiddenimports=['tkinter', 'Pillow._tkinter_finder', 'tkinter._fix', 'tkinter._fiximport'],
     hookspath=['.'],
     hooksconfig={},
