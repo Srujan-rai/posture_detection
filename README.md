@@ -50,7 +50,7 @@ Before you begin, ensure you have met the following requirements:
    git clone https://github.com/your-username/posture-detection-system.git
 
 
-2. Navigate to the Project Repository
+2. Navigate to the Project Repository:
 ```bash
     cd posture-detection-system
 

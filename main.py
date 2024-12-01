@@ -163,11 +163,9 @@ class PostureApp:
         )
         self.stop_button.pack(side=tk.LEFT, padx=10)
 
-        # Canvas for video feed
         self.canvas = tk.Canvas(self.root, width=800, height=500, bg="#e0e0e0", highlightthickness=0)
         self.canvas.pack(pady=20)
 
-        # Label for displaying live posture status
         status_frame = tk.Frame(self.root, bg="#f4f4f9")
         status_frame.pack(pady=10)
 
@@ -246,7 +244,6 @@ class PostureApp:
 
             shoulder_angle = calculate_angle(left_shoulder, nose, right_shoulder)
             back_angle = calculate_angle(left_shoulder, left_hip, right_shoulder)
-            # Define threshold for bad posture
             if 75 <= shoulder_angle <= 88 and 28 <= back_angle <= 34:
                 posture_status = "Good"
                 self.bad_posture_start_time = None
@@ -290,7 +287,6 @@ class PostureApp:
         self.root.after(10, self.process_frame)
 
     def store_posture_data(self, posture_status):
-        # Get the current time
         current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
         data = {
