@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <title>Bar Chart</title>
+</head>
+<body>
+<canvas id="myChart" width="400" height="200"></canvas>
+<script>
+        const ctx = document.getElementById('myChart').getContext('2d');
+
+        // Initialize the chart
+        const chart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: [], // X-axis labels for Status
+                datasets: [{
+                    label: 'Time',
+                    data: [], // Y-axis data (mapped to numeric indices)
+                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Status'
+                        }
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'Time'
+                        },
+                        type: 'category', // Using 'category' type for Y-axis
+                        labels: [] // Will be populated with the time array
+                    }
+                }
+            }
+        });
+
+        // Function to update chart data dynamically
+        function updateChart(statusArray, timeArray) {
+            chart.data.labels = statusArray; // X-axis: Status labels
+            chart.data.datasets[0].data = timeArray; // Y-axis: Time values (directly using time)
+            chart.options.scales.y.labels = timeArray; // Set Y-axis labels as time values
+
+            chart.update(); // Render the updated chart
+        }
+
+        // Call the update function with the test data
+        updateChart(statusArray, timeArray);
+    </script>
+</body>
+</html>
