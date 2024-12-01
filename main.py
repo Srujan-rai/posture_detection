@@ -47,11 +47,9 @@ class LoginSignupApp:
         self.root.geometry("450x450")
         self.root.configure(bg="#f4f4f9")
 
-        # Variables
         self.email_var = tk.StringVar()
         self.password_var = tk.StringVar()
 
-        # Login UI
         tk.Label(self.root, text="Posture Detection Login", font=("Helvetica", 18, "bold"), bg="#f4f4f9").pack(pady=20)
 
         tk.Label(self.root, text="Email:", bg="#f4f4f9", font=("Helvetica", 12)).pack()
@@ -182,7 +180,6 @@ class PostureApp:
         self.status_indicator.pack(side=tk.LEFT)
 
     def logout_user(self):
-        # Stop detection if running
         if self.running:
             self.stop_detection()
 
@@ -230,28 +227,23 @@ class PostureApp:
             self.stop_detection()
             return
 
-        # Process the frame
         image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         results = pose.process(image)
 
-        # Extract pose landmarks and draw on frame
         posture_status = "Good"
         try:
             landmarks = results.pose_landmarks.landmark
 
-            # Get coordinates of key points
             nose = [landmarks[mp_pose.PoseLandmark.NOSE.value].x, landmarks[mp_pose.PoseLandmark.NOSE.value].y]
             left_shoulder = [landmarks[mp_pose.PoseLandmark.LEFT_SHOULDER.value].x,
                              landmarks[mp_pose.PoseLandmark.LEFT_SHOULDER.value].y]
             right_shoulder = [landmarks[mp_pose.PoseLandmark.RIGHT_SHOULDER.value].x,
                               landmarks[mp_pose.PoseLandmark.RIGHT_SHOULDER.value].y]
 
-            # Calculate shoulder angle
             shoulder_angle = calculate_angle(left_shoulder, nose, right_shoulder)
             left_hip = [landmarks[mp_pose.PoseLandmark.LEFT_HIP.value].x, landmarks[mp_pose.PoseLandmark.LEFT_HIP.value].y]
             right_hip = [landmarks[mp_pose.PoseLandmark.RIGHT_HIP.value].x, landmarks[mp_pose.PoseLandmark.RIGHT_HIP.value].y]
 
-            # Calculate angles
             shoulder_angle = calculate_angle(left_shoulder, nose, right_shoulder)
             back_angle = calculate_angle(left_shoulder, left_hip, right_shoulder)
             # Define threshold for bad posture
@@ -275,7 +267,6 @@ class PostureApp:
                 self.bad_posture_start_time = None
                 self.update_status(posture_status)
 
-            # Store every 5 seconds
             if (datetime.now() - self.last_update_time).seconds >= 5:
                 self.last_update_time = datetime.now()
                 self.store_posture_data(posture_status)
