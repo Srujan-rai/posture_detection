@@ -178,6 +178,12 @@ class PostureApp:
         self.status_indicator = tk.Label(status_frame, width=2, height=1, bg="gray")
         self.status_indicator.pack(side=tk.LEFT)
 
+        # Add a label for displaying the guidance message
+        self.guidance_label = tk.Label(
+            self.root, text="Guidance: ", font=("Helvetica", 14), bg="#f4f4f9", wraplength=800
+        )
+        self.guidance_label.pack(pady=10)
+
     def logout_user(self):
         if self.running:
             self.stop_detection()
@@ -230,7 +236,7 @@ class PostureApp:
         results = pose.process(image)
         posture_notification = False
         posture_status = "Good"
-        guidance_message=""
+        guidance_message = ""
         try:
             landmarks = results.pose_landmarks.landmark
 
@@ -248,10 +254,10 @@ class PostureApp:
             if 75 <= shoulder_angle <= 88 and 28 <= back_angle <= 34:
                 posture_status = "Good"
                 self.bad_posture_start_time = None
-                guidance_message="Keep it up! You're sitting well."
+                guidance_message = "Keep it up! You're sitting well."
             else:
                 posture_status = "Bad"
-                guidance_message="Sit upright! Your posture needs adjustment."
+                guidance_message = "Sit upright! Your posture needs adjustment."
 
             if posture_status == "Bad":
                 if self.bad_posture_start_time is None:
@@ -266,9 +272,10 @@ class PostureApp:
 
                 elif (datetime.now() - self.bad_posture_start_time_notification).seconds >= 15:
                     posture_notification = True
-            
+
             self.update_status(posture_status)
-            self.store_posture_data(posture_status, posture_notification,guidance_message)
+            self.store_posture_data(posture_status, posture_notification, guidance_message)
+            self.update_guidance(guidance_message)
 
         except Exception as e:
             print("Error processing landmarks:", e)
@@ -285,7 +292,10 @@ class PostureApp:
 
         self.root.after(10, self.process_frame)
 
-    def store_posture_data(self, posture_status, posture_notification,guidance_message):
+    def update_guidance(self, guidance_message):
+        self.guidance_label.config(text=f"Guidance: {guidance_message}")
+
+    def store_posture_data(self, posture_status, posture_notification, guidance_message):
         current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
         data = {
@@ -306,10 +316,10 @@ class PostureApp:
             oldest_key = min(history_data.keys(), key=lambda k: int(k))
 
             history_ref.child(oldest_key).remove()
-        
+
         db.child("posture_logs").child(self.user_id).child("notification").set(notification)
         db.child("posture_logs").child(self.user_id).child("Guidance_message").set(guidance_message)
-        
+
         
 if __name__ == "__main__":
     root = tk.Tk()
