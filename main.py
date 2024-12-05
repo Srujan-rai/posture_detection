@@ -104,6 +104,7 @@ class PostureApp:
         self.last_update_time = datetime.now()
         self.last_posture = None
 
+        self.bad_posture_start_time_notification = None  # For notification tracking
         self.setup_ui()
 
     def setup_ui(self):
@@ -227,8 +228,9 @@ class PostureApp:
 
         image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         results = pose.process(image)
-
+        posture_notification = False
         posture_status = "Good"
+        guidance_message=""
         try:
             landmarks = results.pose_landmarks.landmark
 
@@ -242,57 +244,56 @@ class PostureApp:
             left_hip = [landmarks[mp_pose.PoseLandmark.LEFT_HIP.value].x, landmarks[mp_pose.PoseLandmark.LEFT_HIP.value].y]
             right_hip = [landmarks[mp_pose.PoseLandmark.RIGHT_HIP.value].x, landmarks[mp_pose.PoseLandmark.RIGHT_HIP.value].y]
 
-            shoulder_angle = calculate_angle(left_shoulder, nose, right_shoulder)
             back_angle = calculate_angle(left_shoulder, left_hip, right_shoulder)
             if 75 <= shoulder_angle <= 88 and 28 <= back_angle <= 34:
                 posture_status = "Good"
                 self.bad_posture_start_time = None
+                guidance_message="Keep it up! You're sitting well."
             else:
                 posture_status = "Bad"
+                guidance_message="Sit upright! Your posture needs adjustment."
 
-            # Track bad posture for more than 2 seconds
             if posture_status == "Bad":
                 if self.bad_posture_start_time is None:
                     self.bad_posture_start_time = datetime.now()
-                elif (datetime.now() - self.bad_posture_start_time).seconds >= 2:
-                    posture_status="bad"
-                    
-            if (datetime.now() - self.last_update_time).seconds >= 5:
-                        self.update_status(posture_status)
-                        self.store_posture_data(posture_status)
-            else:
-                self.bad_posture_start_time = None
-                self.update_status(posture_status)
 
-            if (datetime.now() - self.last_update_time).seconds >= 5:
-                self.last_update_time = datetime.now()
-                self.store_posture_data(posture_status)
+                elif (datetime.now() - self.bad_posture_start_time).seconds >= 2:
+                    posture_status = "Bad"
+                    
+            if posture_status == "Bad":
+                if self.bad_posture_start_time_notification is None:
+                    self.bad_posture_start_time_notification = datetime.now()
+
+                elif (datetime.now() - self.bad_posture_start_time_notification).seconds >= 15:
+                    posture_notification = True
+            
+            self.update_status(posture_status)
+            self.store_posture_data(posture_status, posture_notification,guidance_message)
 
         except Exception as e:
             print("Error processing landmarks:", e)
             self.update_status("Not Detected")
-            
-            
+
         image.flags.writeable = True
         if results.pose_landmarks:
             mp_drawing.draw_landmarks(image, results.pose_landmarks, mp_pose.POSE_CONNECTIONS)
-        # Display the frame
+        
         img = Image.fromarray(image)
         imgtk = ImageTk.PhotoImage(image=img)
-
         self.canvas.create_image(0, 0, anchor=tk.NW, image=imgtk)
         self.canvas.image = imgtk
 
-        # Schedule the next frame
         self.root.after(10, self.process_frame)
 
-    def store_posture_data(self, posture_status):
+    def store_posture_data(self, posture_status, posture_notification,guidance_message):
         current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
         data = {
             "status": posture_status,
             "time": current_time,
         }
+
+        notification = True if posture_notification else False
         db.child("posture_logs").child(self.user_id).child("live").set(data)
 
         history_ref = db.child("posture_logs").child(self.user_id).child("history")
@@ -305,6 +306,11 @@ class PostureApp:
             oldest_key = min(history_data.keys(), key=lambda k: int(k))
 
             history_ref.child(oldest_key).remove()
+        
+        db.child("posture_logs").child(self.user_id).child("notification").set(notification)
+        db.child("posture_logs").child(self.user_id).child("Guidance_message").set(guidance_message)
+        
+        
 if __name__ == "__main__":
     root = tk.Tk()
     app = LoginSignupApp(root)
