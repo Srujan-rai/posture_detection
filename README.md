@@ -1,4 +1,4 @@
-# Real-Time Posture Detection System
+# Real-Time Posture Detection System..
 
 This project is a real-time posture detection system that utilizes **Mediapipe**, **OpenCV**, and **Firebase** to monitor and analyze human posture. It calculates joint angles using key points on the body and provides feedback on whether the user's posture is "Good" or "Bad". The system includes a graphical user interface (GUI) for live video feed display and posture evaluation.
 
