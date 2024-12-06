@@ -28,6 +28,9 @@ public class PostureDataActivity extends AppCompatActivity {
     private FirebaseAuth firebaseAuth;
     private TextView statusTextView;
     private Button logoutButton;
+
+    private Button viewHistoryButton;
+
     private WebView chartWebView;
 
     private long badPostureStartTime = 0;
@@ -42,6 +45,8 @@ public class PostureDataActivity extends AppCompatActivity {
         firebaseAuth = FirebaseAuth.getInstance();
         statusTextView = findViewById(R.id.statusTextView);
         logoutButton = findViewById(R.id.logoutButton);
+        viewHistoryButton = findViewById(R.id.viewHistoryButton);
+
         chartWebView = findViewById(R.id.webView);
 
         // Enable WebView settings
@@ -119,6 +124,12 @@ public class PostureDataActivity extends AppCompatActivity {
             public void onCancelled(@NonNull DatabaseError error) {
                 // Handle error
             }
+        });
+
+        viewHistoryButton.setOnClickListener(v -> {
+            // Navigate to HistoryRecordsActivity
+            Intent intent = new Intent(PostureDataActivity.this, HistoryRecordsActivity.class);
+            startActivity(intent);
         });
 
         // Logout button functionality

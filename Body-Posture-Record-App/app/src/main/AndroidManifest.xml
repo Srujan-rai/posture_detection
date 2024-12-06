@@ -17,6 +17,8 @@
             android:exported="false" />
         <activity android:name=".MainActivity" />
         <activity android:name=".authentication.Register" />
+        <activity android:name=".HistoryRecordsActivity" />
+
         <activity
             android:name=".authentication.Login"
             android:exported="true">
