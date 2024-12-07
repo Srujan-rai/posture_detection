@@ -6,6 +6,8 @@ from datetime import datetime
 import tkinter as tk
 from tkinter import ttk, messagebox
 from PIL import Image, ImageTk
+import threading
+import queue
 
 # Firebase configuration
 firebase_config = {
@@ -39,7 +41,6 @@ def calculate_angle(a, b, c):
     return angle
 
 
-# Login and Signup Frames
 class LoginSignupApp:
     def __init__(self, root):
         self.root = root
@@ -92,7 +93,7 @@ class LoginSignupApp:
 class PostureApp:
     def __init__(self, root, user_id):
         self.root = root
-        self.user_id = user_id  
+        self.user_id = user_id
         self.root.title("Posture Detection Application")
         self.root.geometry("900x900")
         self.root.configure(bg="#f4f4f9")
@@ -100,11 +101,12 @@ class PostureApp:
         self.camera_index = tk.IntVar(value=0)
         self.running = False
         self.cap = None
-        self.bad_posture_start_time = None
-        self.last_update_time = datetime.now()
-        self.last_posture = None
+        self.frame_queue = queue.Queue(maxsize=1)  # Queue to store video frames
+        self.video_thread = None
 
-        self.bad_posture_start_time_notification = None  # For notification tracking
+        self.bad_posture_start_time = None
+        self.bad_posture_start_time_notification = None
+
         self.setup_ui()
 
     def setup_ui(self):
@@ -178,29 +180,17 @@ class PostureApp:
         self.status_indicator = tk.Label(status_frame, width=2, height=1, bg="gray")
         self.status_indicator.pack(side=tk.LEFT)
 
-        # Add a label for displaying the guidance message
         self.guidance_label = tk.Label(
             self.root, text="Guidance: ", font=("Helvetica", 14), bg="#f4f4f9", wraplength=800
         )
         self.guidance_label.pack(pady=10)
 
     def logout_user(self):
-        if self.running:
-            self.stop_detection()
-
+        self.stop_detection()
         self.root.destroy()
         root = tk.Tk()
         LoginSignupApp(root)
         root.mainloop()
-
-    def update_status(self, posture_status):
-        self.status_label.config(text=f"Posture Status: {posture_status}")
-        if posture_status == "Good":
-            self.status_indicator.config(bg="green")
-        elif posture_status == "Bad":
-            self.status_indicator.config(bg="red")
-        else:
-            self.status_indicator.config(bg="gray")
 
     def start_detection(self):
         if self.running:
@@ -213,114 +203,93 @@ class PostureApp:
             return
 
         self.running = True
-        self.process_frame()
+
+        # Start the video capture thread
+        self.video_thread = threading.Thread(target=self.capture_frames)
+        self.video_thread.daemon = True
+        self.video_thread.start()
+
+        self.process_frames()
 
     def stop_detection(self):
         self.running = False
         if self.cap:
             self.cap.release()
         self.canvas.delete("all")
-        self.update_status("Not Detected")
 
-    def process_frame(self):
+    def capture_frames(self):
+        while self.running:
+            ret, frame = self.cap.read()
+            if ret:
+                resized_frame = cv2.resize(frame, (640, 360))  # Resize for efficiency
+                if not self.frame_queue.full():
+                    self.frame_queue.put(resized_frame)
+
+    def process_frames(self):
         if not self.running:
             return
 
-        ret, frame = self.cap.read()
-        if not ret:
-            messagebox.showerror("Error", "Failed to read frame from camera.")
-            self.stop_detection()
-            return
+        if not self.frame_queue.empty():
+            frame = self.frame_queue.get()
+            image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
-        image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        results = pose.process(image)
-        posture_notification = False
-        posture_status = "Good"
-        guidance_message = ""
-        try:
-            landmarks = results.pose_landmarks.landmark
+            results = pose.process(image)
+            posture_status = "Good"
+            guidance_message = ""
 
-            nose = [landmarks[mp_pose.PoseLandmark.NOSE.value].x, landmarks[mp_pose.PoseLandmark.NOSE.value].y]
-            left_shoulder = [landmarks[mp_pose.PoseLandmark.LEFT_SHOULDER.value].x,
-                             landmarks[mp_pose.PoseLandmark.LEFT_SHOULDER.value].y]
-            right_shoulder = [landmarks[mp_pose.PoseLandmark.RIGHT_SHOULDER.value].x,
-                              landmarks[mp_pose.PoseLandmark.RIGHT_SHOULDER.value].y]
+            if results.pose_landmarks:
+                mp_drawing.draw_landmarks(image, results.pose_landmarks, mp_pose.POSE_CONNECTIONS)
 
-            shoulder_angle = calculate_angle(left_shoulder, nose, right_shoulder)
-            left_hip = [landmarks[mp_pose.PoseLandmark.LEFT_HIP.value].x, landmarks[mp_pose.PoseLandmark.LEFT_HIP.value].y]
-            right_hip = [landmarks[mp_pose.PoseLandmark.RIGHT_HIP.value].x, landmarks[mp_pose.PoseLandmark.RIGHT_HIP.value].y]
+                try:
+                    landmarks = results.pose_landmarks.landmark
+                    nose = [landmarks[mp_pose.PoseLandmark.NOSE.value].x, landmarks[mp_pose.PoseLandmark.NOSE.value].y]
+                    left_shoulder = [
+                        landmarks[mp_pose.PoseLandmark.LEFT_SHOULDER.value].x,
+                        landmarks[mp_pose.PoseLandmark.LEFT_SHOULDER.value].y,
+                    ]
+                    right_shoulder = [
+                        landmarks[mp_pose.PoseLandmark.RIGHT_SHOULDER.value].x,
+                        landmarks[mp_pose.PoseLandmark.RIGHT_SHOULDER.value].y,
+                    ]
+                    shoulder_angle = calculate_angle(left_shoulder, nose, right_shoulder)
+                    left_hip = [
+                        landmarks[mp_pose.PoseLandmark.LEFT_HIP.value].x,
+                        landmarks[mp_pose.PoseLandmark.LEFT_HIP.value].y,
+                    ]
+                    right_hip = [
+                        landmarks[mp_pose.PoseLandmark.RIGHT_HIP.value].x,
+                        landmarks[mp_pose.PoseLandmark.RIGHT_HIP.value].y,
+                    ]
+                    back_angle = calculate_angle(left_shoulder, left_hip, right_shoulder)
 
-            back_angle = calculate_angle(left_shoulder, left_hip, right_shoulder)
-            if 72 <= shoulder_angle <= 88 and 25 <= back_angle <= 36:
-                posture_status = "Good"
-                self.bad_posture_start_time = None
-                guidance_message = "Keep it up! You're sitting well."
-            else:
-                posture_status = "Bad"
-                guidance_message = "Sit upright! Your posture needs adjustment."
+                    if 72 <= shoulder_angle <= 88 and 25 <= back_angle <= 36:
+                        posture_status = "Good"
+                        guidance_message = "Keep it up! You're sitting well."
+                    else:
+                        posture_status = "Bad"
+                        guidance_message = "Sit upright! Your posture needs adjustment."
 
-            if posture_status == "Bad":
-                if self.bad_posture_start_time is None:
-                    self.bad_posture_start_time = datetime.now()
+                    self.update_status(posture_status)
+                    self.update_guidance(guidance_message)
+                except Exception as e:
+                    print("Error processing landmarks:", e)
+                    self.update_status("Not Detected")
 
-                elif (datetime.now() - self.bad_posture_start_time).seconds >= 2:
-                    posture_status = "Bad"
-                    
-            if posture_status == "Bad":
-                if self.bad_posture_start_time_notification is None:
-                    self.bad_posture_start_time_notification = datetime.now()
+            img = Image.fromarray(image)
+            imgtk = ImageTk.PhotoImage(image=img)
+            self.canvas.create_image(0, 0, anchor=tk.NW, image=imgtk)
+            self.canvas.image = imgtk
 
-                elif (datetime.now() - self.bad_posture_start_time_notification).seconds >= 15:
-                    posture_notification = True
+        self.root.after(10, self.process_frames)
 
-            self.update_status(posture_status)
-            self.store_posture_data(posture_status, posture_notification, guidance_message)
-            self.update_guidance(guidance_message)
-
-        except Exception as e:
-            print("Error processing landmarks:", e)
-            self.update_status("Not Detected")
-
-        image.flags.writeable = True
-        if results.pose_landmarks:
-            mp_drawing.draw_landmarks(image, results.pose_landmarks, mp_pose.POSE_CONNECTIONS)
-        
-        img = Image.fromarray(image)
-        imgtk = ImageTk.PhotoImage(image=img)
-        self.canvas.create_image(0, 0, anchor=tk.NW, image=imgtk)
-        self.canvas.image = imgtk
-
-        self.root.after(10, self.process_frame)
+    def update_status(self, posture_status):
+        self.status_label.config(text=f"Posture Status: {posture_status}")
+        self.status_indicator.config(bg="green" if posture_status == "Good" else "red")
 
     def update_guidance(self, guidance_message):
         self.guidance_label.config(text=f"Guidance: {guidance_message}")
 
-    def store_posture_data(self, posture_status, posture_notification, guidance_message):
-        current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-        data = {
-            "status": posture_status,
-            "time": current_time,
-        }
-
-        notification = True if posture_notification else False
-        db.child("posture_logs").child(self.user_id).child("live").set(data)
-
-        history_ref = db.child("posture_logs").child(self.user_id).child("history")
-
-        history_ref.push(data)
-
-        history_data = history_ref.get().val() or {}
-
-        if len(history_data) > 300:
-            oldest_key = min(history_data.keys(), key=lambda k: int(k))
-
-            history_ref.child(oldest_key).remove()
-
-        db.child("posture_logs").child(self.user_id).child("notification").set(notification)
-        db.child("posture_logs").child(self.user_id).child("Guidance_message").set(guidance_message)
-
-        
 if __name__ == "__main__":
     root = tk.Tk()
     app = LoginSignupApp(root)
